@@ -33,22 +33,22 @@
         name: '',
         email: '',
         password: '',
-        id_role: 3, // Role by default
+        id_role: '', 
         message: ''
       };
     },
     methods: {
       async registerUser() {
         try {
-          const response = await axios.post('https://your-api-endpoint/register', {
+          const response = await axios.post('http://127.0.0.1:8000/api/register', {
             name: this.name,
             email: this.email,
             password: this.password,
             id_role: this.id_role
           });
-          this.message = 'Registration successful!';
+          this.message = 'Registration successful';
         } catch (error) {
-          this.message = 'Error during registration!';
+          this.message = 'Error  registration';
           console.error(error);
         }
       }
