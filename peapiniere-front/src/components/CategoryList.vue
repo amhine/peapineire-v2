@@ -1,33 +1,92 @@
-<template>
-    <ul>
-      <li v-for="cat in categories" :key="cat.id" class="flex items-center justify-between border-b py-2">
-        <span>{{ cat.name }}</span>
-        <div>
-          <button @click="updateCategory(cat)" class="text-blue-600 mr-2">Modifier</button>
-          <button @click="deleteCategory(cat.id)" class="text-red-600">Supprimer</button>
-        </div>
-      </li>
-    </ul>
+
+   <template>
+    <div class="my-6">
+      <h2 class="text-xl font-bold mb-4">Liste des Catégories</h2>
+  
+      <p v-if="errorMessage" class="text-red-600">{{ errorMessage }}</p>
+  
+      <ul v-if="categories.length">
+        <li
+          v-for="categorie in categories"
+          :key="categorie.id"
+          class="mb-2 p-2 border rounded flex justify-between items-center"
+        >
+          <span>{{ categorie.name }}</span>
+          <div class="space-x-2">
+            <button
+              class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+              @click="$emit('edit', categorie)"
+            >
+              Modifier
+            </button>
+            <button
+              class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              @click="supprimerCategorie(categorie.id)"
+            >
+              Supprimer
+            </button>
+          </div>
+        </li>
+      </ul>
+      <p v-else>Aucune catégorie trouvée.</p>
+    </div>
   </template>
   
   <script setup>
+  import { ref, onMounted } from 'vue'
   import axios from 'axios'
-  import { ref } from 'vue'
   
-  const props = defineProps(['categories'])
-  const emit = defineEmits(['refresh'])
+  const props = defineProps({})
+  const emit = defineEmits(['refresh', 'edit'])
   
-  const deleteCategory = async (id) => {
-    await axios.delete(`http://localhost:8000/api/categories/${id}/supprimer`)
-    emit('refresh')
-  }
+  const categories = ref([])
+  const errorMessage = ref('')
   
-  const updateCategory = async (cat) => {
-    const newName = prompt("Modifier le nom :", cat.name)
-    if (newName && newName !== cat.name) {
-      await axios.put(`http://localhost:8000/api/categories/${cat.id}/update`, { name: newName })
-      emit('refresh')
+  const fetchCategories = async () => {
+    const token = localStorage.getItem('token')
+  
+    try {
+      const res = await axios.get('http://localhost:8000/api/categories/afficher', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      categories.value = res.data.data
+    } catch (error) {
+      errorMessage.value = error.response?.data?.message || 'Erreur lors du chargement.'
     }
   }
+  
+  const supprimerCategorie = async (id) => {
+    const token = localStorage.getItem('token')
+  
+    try {
+      await axios.delete(`http://localhost:8000/api/categories/${id}/supprimer`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      emit('refresh')
+    } catch (error) {
+      errorMessage.value = error.response?.data?.message || 'Erreur lors de la suppression.'
+    }
+  }
+  const ModifierCategorie = async (id) => {
+    const token = localStorage.getItem('token')
+  
+    try {
+      await axios.put(`http://localhost:8000/api/categories/${id}/update`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      emit('refresh')
+    } catch (error) {
+      errorMessage.value = error.response?.data?.message || 'Erreur lors de la suppression.'
+    }
+  }
+  
+  onMounted(fetchCategories)
+  defineExpose({ fetchCategories })
   </script>
   
